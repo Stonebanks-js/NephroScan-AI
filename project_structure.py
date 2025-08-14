@@ -8,7 +8,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s]: %(message)s:')
 
-project_name = 'NephroScan AI'
+project_name = 'NephroScan-AI'
 
 # Created .github folder inside which workflows folder is kept because whenever we are committing our code in GitHub, and if it is empty, we keep a .gitkeep file. At the time of CI/CD pipeline creation, we will replace this .gitkeep
 # with main.yaml file (a core file of CI/CD).
