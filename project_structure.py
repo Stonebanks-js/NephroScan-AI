@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s]: %(message)s:')
 project_name = 'NephroScan AI'
 
 # Created .github folder inside which workflows folder is kept because whenever we are committing our code in GitHub, and if it is empty, we keep a .gitkeep file. At the time of CI/CD pipeline creation, we will replace this .gitkeep
-#  with main.yaml file (a core file of CI/CD).
+# with main.yaml file (a core file of CI/CD).
 # Created a SOURCE folder to maintain a secure structure of code so that it follows the availability, scalability, maintainability principles.
 # Created a configuration.yaml file where < YAML file is a human-readable text format used to store and organize data in a structured way.
 # YAML is widely used for configurations, data serialization, and pipeline setups because it’s easy for both humans and machines to read.
