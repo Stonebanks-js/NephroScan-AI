@@ -1,0 +1,14 @@
+AUGMENTATION: True
+IMAGE_SIZE: [224, 224, 3]
+BATCH_SIZE: 16
+INCLUDE_TOP: False
+EPOCHS: 1
+CLASSES: 2
+WEIGHTS: imagenet
+LEARNING_RATE: 0.01
+
+
+
+
+# We are Using the following parameters for the base model
+# These are the paramters for VGG 16 Best efficiency
