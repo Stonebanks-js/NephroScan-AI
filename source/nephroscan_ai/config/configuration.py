@@ -1,6 +1,7 @@
 from nephroscan_ai.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH
 from nephroscan_ai.utils.common import read_yaml, create_directories
-from nephroscan_ai.entity.config_entity import DataIngestionConfig
+from nephroscan_ai.entity.config_entity import (DataIngestionConfig, PrepareBaseModelConfig)
+import os 
 
 from pathlib import Path
 
@@ -30,3 +31,26 @@ class ConfigurationManager:
         )
 
         return data_ingestion_config
+    
+
+
+
+    def get_prepare_base_model_config(self) -> PrepareBaseModelConfig:
+        config = self.config.prepare_base_model
+        params = self.params
+
+        prepare_base_model_dir = os.path.join(self.config.artifacts_root, config.dir_name)
+        create_directories([prepare_base_model_dir])
+
+        prepare_base_model_cfg = PrepareBaseModelConfig(
+            root_dir = Path(prepare_base_model_dir),
+            base_model_path = Path(os.path.join(prepare_base_model_dir, config.base_model_path)),
+            updated_base_model_path = Path(os.path.join(prepare_base_model_dir, config.updated_base_model_path)),
+            params_imagesize = params.IMAGE_SIZE,
+            params_learning_rate = params.LEARNING_RATE,
+            params_include_top = params.INCLUDE_TOP,
+            params_classes = params.CLASSES,
+            params_weights = params.WEIGHTS
+        )
+
+        return prepare_base_model_cfg
