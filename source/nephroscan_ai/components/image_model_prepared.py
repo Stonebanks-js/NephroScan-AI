@@ -1,10 +1,11 @@
-import os 
+# source/nephroscan_ai/components/image_model_prepared.py
+import os
 import tensorflow as tf
 from pathlib import Path
-from keras.applications import VGG16
+from tensorflow.keras.applications import mobilenet_v2  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
 from nephroscan_ai.config.configuration import PrepareBaseModelConfig
 
-
+# pyright: ignore[reportMissingTypeStubs]
 class PrepareBaseModel:
     def __init__(self, config: PrepareBaseModelConfig):
         self.config = config
@@ -13,24 +14,31 @@ class PrepareBaseModel:
 
     def get_base_model(self):
         """
-        Load the base VGG16 model with given parameters and save it.
+        Create MobileNetV2 base (include_top=False) and save base model file.
         """
-        self.model = VGG16(
+        self.model = mobilenet_v2.MobileNetV2(
             input_shape=tuple(self.config.params_imagesize),
-            include_top=self.config.params_include_top,
-            weights=self.config.params_weights,
-            classes=self.config.params_classes,
-        )
+            include_top=False,
+            weights=self.config.params_weights
+        )  # pyright: ignore
 
-        # ensure directory exists
+        # Ensure directory exists before saving
         os.makedirs(os.path.dirname(self.config.base_model_path), exist_ok=True)
-        self.model.save(self.config.base_model_path)
+        self.model.save(str(self.config.base_model_path))  # pyright: ignore[reportAttributeAccessIssue]
 
     @staticmethod
-    def _prepare_full_model(model, classes, freeze_all, freeze_till, learning_rate):
+    def _prepare_full_model(model: tf.keras.Model,  # type: ignore
+                            classes: int,
+                            freeze_all: bool,
+                            freeze_till: int | None,
+                            learning_rate: float,
+                            dense_units: int = 512,
+                            dropout_rate: float = 0.5) -> tf.keras.Model:  # type: ignore
         """
-        Prepare a custom model on top of the base VGG16.
+        Compose classification head on top of base MobileNetV2.
+        Head: GAP -> Dense(dense_units, relu) -> Dropout -> Dense(classes, softmax)
         """
+        # freeze layers
         if freeze_all:
             for layer in model.layers:
                 layer.trainable = False
@@ -38,47 +46,48 @@ class PrepareBaseModel:
             for layer in model.layers[:-freeze_till]:
                 layer.trainable = False
 
-        flatten_in = tf.keras.layers.Flatten()(model.output) # pyright: ignore[reportAttributeAccessIssue]
-        prediction = tf.keras.layers.Dense( # pyright: ignore[reportAttributeAccessIssue]
-            units=classes,
-            activation="softmax"
-        )(flatten_in)
+        x = tf.keras.layers.GlobalAveragePooling2D()(model.output)  # pyright: ignore
+        x = tf.keras.layers.Dense(dense_units, activation="relu")(x)  # pyright: ignore
+        x = tf.keras.layers.Dropout(dropout_rate)(x)  # pyright: ignore
+        out = tf.keras.layers.Dense(units=classes, activation="softmax")(x)  # pyright: ignore
 
-        full_model = tf.keras.models.Model( # pyright: ignore[reportAttributeAccessIssue]
-            inputs=model.input,
-            outputs=prediction
-        )
-
+        full_model = tf.keras.models.Model(inputs=model.input, outputs=out)  # pyright: ignore
         full_model.compile(
-            optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate), # pyright: ignore[reportAttributeAccessIssue]
-            loss=tf.keras.losses.CategoricalCrossentropy(), # pyright: ignore[reportAttributeAccessIssue]
+            optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9),  # type: ignore
+            loss=tf.keras.losses.CategoricalCrossentropy(),  # type: ignore
             metrics=["accuracy"]
         )
 
         full_model.summary()
         return full_model
 
-    def update_base_model(self):
+    def update_base_model(self,
+                          freeze_all: bool = True,
+                          freeze_till: int | None = None,
+                          learning_rate: float | None = None,
+                          dense_units: int = 512,
+                          dropout_rate: float = 0.5):
         """
-        Freeze layers and update the base model with classification head.
+        Build and save the updated base model (with head).
         """
         if self.model is None:
             raise ValueError("Base model not loaded. Run get_base_model() first.")
 
+        lr = learning_rate if learning_rate is not None else self.config.params_learning_rate
+
         self.full_model = self._prepare_full_model(
             model=self.model,
             classes=self.config.params_classes,
-            freeze_all=True,
-            freeze_till=None,
-            learning_rate=self.config.params_learning_rate,
+            freeze_all=freeze_all,
+            freeze_till=freeze_till,
+            learning_rate=lr,
+            dense_units=dense_units,
+            dropout_rate=dropout_rate
         )
 
-        # ensure directory exists
+        # Ensure directory exists before saving
         os.makedirs(os.path.dirname(self.config.updated_base_model_path), exist_ok=True)
         self.save_model(path=self.config.updated_base_model_path, model=self.full_model)
 
-    def save_model(self, path: Path, model: tf.keras.Model): # pyright: ignore[reportAttributeAccessIssue]
-        """
-        Save the given model to the provided path.
-        """
-        model.save(path)
+    def save_model(self, path: Path, model: tf.keras.Model):  # pyright: ignore[reportAttributeAccessIssue]
+        model.save(str(path))  # pyright: ignore[reportAttributeAccessIssue]

@@ -1,14 +1,8 @@
 AUGMENTATION: True
-IMAGE_SIZE: [224, 224, 3]
-BATCH_SIZE: 16
+IMAGE_SIZE: [160, 160, 3]
+BATCH_SIZE: 32
 INCLUDE_TOP: False
-EPOCHS: 20
-CLASSES: 4
+EPOCHS: 5
+CLASSES: 4          # you can set to actual or let code detect automatically
 WEIGHTS: imagenet
-LEARNING_RATE: 0.01
-
-
-
-
-# We are Using the following parameters for the base model
-# These are the paramters for VGG 16 Best efficiency
+LEARNING_RATE: 0.001
