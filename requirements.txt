@@ -17,4 +17,10 @@ Flask
 Flask-Cors
 gdown
 tf-keras
+fastapi
+uvicorn
+tensorflow
+numpy
+pillow
+python-multipart
 
