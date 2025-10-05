@@ -27,7 +27,12 @@ share/python-wheels/
 MANIFEST
 
 # Artifacts from ML pipelines
-artifacts/
+# Artifacts from ML pipelines (ignore all except final model)
+artifacts/*
+!artifacts/training/
+artifacts/training/*
+!artifacts/training/model.keras
+
 
 # PyInstaller
 *.manifest
