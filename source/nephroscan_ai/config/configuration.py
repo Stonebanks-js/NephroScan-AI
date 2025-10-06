@@ -73,3 +73,12 @@ class ConfigurationManager:
             params_image_size=params.IMAGE_SIZE
         )
         return training_config
+
+
+
+
+
+
+
+
+# added a empty file
